@@ -81,22 +81,34 @@ def psfreq(
 
 def azimuthal_average(
     image: np.ndarray,
-    binspacing: float = 1,
+    coords: np.ndarray = None,
+    binspacing: float = None,
     rmax: float = None,
     rbins: np.ndarray = None,
     center: np.ndarray = None,
 ):
-    indices = np.indices(image.shape)
+    if coords is None:
+        coords = np.indices(image.shape)
+        if center is None:
+            center = (np.array(image.shape) - 1) / 2
+        if binspacing is None:
+            binspacing = 1
+    else:
+        coords = np.array(np.meshgrid(*coords))
+        if center is None:
+            center = np.array([(c[-1] - c[0]) / 2 for c in coords])
+        if binspacing is None:
+            binspacing = np.max(np.array([c[1] - c[0] for c in coords]))
 
-    if center is None:
-        center = (np.array(image.shape) - 1) / 2
-
-    coords = indices - np.reshape(center, (-1,) + image.ndim * (1,))
+    coords = coords - np.reshape(center, (-1,) + image.ndim * (1,))
     r = np.sqrt(np.sum(coords**2, axis=0))
 
     if rbins is None:
         if rmax is None:
-            rmax = np.min(np.r_[center, np.array(image.shape) - 1 - center])
+            rmax = np.min(
+                [np.max(np.abs(coords[i, ...])) for i in range(coords.shape[0])]
+            )
+            # rmax = np.min(np.r_[center, np.array(image.shape) - 1 - center])
         rbins = np.arange(0, rmax, binspacing)
 
     rbinned, bin_edges, _ = scipy.stats.binned_statistic(
