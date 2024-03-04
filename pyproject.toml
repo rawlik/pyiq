@@ -1,0 +1,8 @@
+[project]
+name = "pyiq"
+readme = "README.md"
+version = "0.0.1"
+dependencies = ["numpy", "scipy", "skimage"]
+
+[tool.setuptools]
+py-modules = ["pyiq"]
